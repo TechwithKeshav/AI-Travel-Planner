@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Travel Planner — TechWithKeshav</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--bg:#06060f;--surface:#111118;--surface2:#1a1a24;--border:rgba(255,255,255,0.07);--text:#f0f0ff;--muted:#8888aa;--primary:#7c3aed;--primary-light:rgba(124,58,237,0.12);--blue:#3b82f6;--green:#10b981;--amber:#f59e0b;--red:#ef4444;--grad1:linear-gradient(135deg,#7c3aed,#2563eb);--grad2:linear-gradient(135deg,#a855f7,#3b82f6)}
+    *{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;min-height:100vh}
+    .bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(124,58,237,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,0.03) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0}
+    nav{position:sticky;top:0;z-index:100;background:rgba(6,6,15,0.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between}
+    .nav-brand{font-family:'Inter',sans-serif;font-size:1rem;font-weight:900;background:var(--grad1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .nav-badge{font-size:0.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border-radius:100px;background:var(--primary-light);color:#c084fc;border:1px solid rgba(124,58,237,0.25)}
+    .wrapper{max-width:900px;margin:0 auto;padding:24px;position:relative;z-index:1}
+    .hero{text-align:center;padding:48px 0 32px}
+    .hero-tag{display:inline-flex;align-items:center;gap:8px;background:var(--primary-light);border:1px solid rgba(124,58,237,0.25);border-radius:100px;padding:6px 18px;font-size:0.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#c084fc;margin-bottom:24px}
+    .ai-dot{width:6px;height:6px;border-radius:50%;background:#c084fc;animation:pulse 2s infinite;display:inline-block}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+    .hero h1{font-family:'Inter',sans-serif;font-size:clamp(2rem,5vw,3.2rem);font-weight:900;letter-spacing:-2px;line-height:1.05;margin-bottom:16px}
+    .hero h1 span{background:var(--grad2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .hero p{color:var(--muted);font-size:0.9rem;line-height:1.8;max-width:500px;margin:0 auto}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:24px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+    @media(max-width:600px){.form-grid{grid-template-columns:1fr}}
+    .form-group{display:flex;flex-direction:column;gap:4px}
+    .form-group.full{grid-column:1/-1}
+    label{font-size:0.72rem;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+    input,select{width:100%;padding:11px 16px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;font-family:'Space Grotesk',sans-serif;font-size:0.88rem;color:var(--text);outline:none;transition:all 0.2s}
+    input:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(124,58,237,0.15)}
+    input::placeholder{color:var(--muted)}
+    select option{background:var(--surface2)}
+    .style-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px}
+    @media(max-width:600px){.style-grid{grid-template-columns:repeat(2,1fr)}}
+    .style-card{background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:16px;text-align:center;cursor:pointer;transition:all 0.2s}
+    .style-card:hover{border-color:rgba(124,58,237,0.4);transform:translateY(-2px)}
+    .style-card.selected{border-color:var(--primary);background:var(--primary-light)}
+    .style-card .icon{font-size:1.5rem;margin-bottom:4px}
+    .style-card .name{font-size:0.76rem;font-weight:700}
+    .style-card.selected .name{color:#c084fc}
+    .btn-gen{width:100%;padding:16px;background:var(--grad1);color:#fff;border:none;border-radius:8px;font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:10px}
+    .btn-gen:hover{opacity:0.9;transform:translateY(-1px)}
+    .btn-gen:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+    .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    .loading{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:48px;text-align:center;display:none;margin-bottom:24px}
+    .loading-emoji{font-size:3rem;animation:float 2s ease-in-out infinite;display:block;margin-bottom:16px}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    .loading h3{font-family:'Inter',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:8px}
+    .loading p{color:var(--muted);font-size:0.8rem;margin-bottom:24px}
+    .bar-wrap{width:100%;height:4px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-bottom:8px}
+    .bar{height:100%;background:var(--grad1);border-radius:4px;width:0%;transition:width 0.5s ease}
+    .bar-status{font-size:0.72rem;color:var(--muted)}
+    .itin{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;display:none;animation:fadeIn 0.5s ease;margin-bottom:24px}
+    .itin-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:16px}
+    .itin-title{font-family:'Inter',sans-serif;font-size:1.8rem;font-weight:900;letter-spacing:-1px;margin-bottom:4px}
+    .itin-meta{font-size:0.78rem;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap}
+    .itin-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .btn-sm{padding:8px 16px;border-radius:8px;font-family:'Space Grotesk',sans-serif;font-size:0.75rem;font-weight:700;cursor:pointer;transition:all 0.2s;border:1px solid var(--border);background:var(--surface2);color:var(--text)}
+    .btn-sm:hover{border-color:rgba(124,58,237,0.4);color:#c084fc}
+    .btn-sm.p{background:var(--grad1);color:#fff;border:none}
+    .slabel{font-size:0.62rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+    .slabel::before{content:'';width:16px;height:2px;background:var(--grad1);border-radius:2px;display:inline-block}
+    .budget-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:24px}
+    .bitem{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;position:relative;overflow:hidden}
+    .bitem::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--grad1)}
+    .bval{font-family:'Inter',sans-serif;font-size:1rem;font-weight:800;margin-bottom:2px}
+    .blabel{font-size:0.62rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+    .days-wrap{display:flex;flex-direction:column;gap:16px}
+    .dcard{background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .dhead{padding:12px 20px;background:var(--grad1);display:flex;justify-content:space-between;align-items:center}
+    .dtitle{font-family:'Inter',sans-serif;font-size:0.9rem;font-weight:800;color:#fff}
+    .dbadge{font-size:0.7rem;color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.15);padding:3px 10px;border-radius:100px}
+    .dbody{padding:20px;display:flex;flex-direction:column;gap:16px}
+    .slot{display:flex;gap:16px}
+    .sbadge{font-size:0.62rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:100px;white-space:nowrap;height:fit-content;margin-top:2px}
+    .sm{background:rgba(245,158,11,0.12);color:var(--amber);border:1px solid rgba(245,158,11,0.25)}
+    .sa{background:rgba(59,130,246,0.12);color:var(--blue);border:1px solid rgba(59,130,246,0.25)}
+    .se{background:rgba(124,58,237,0.12);color:#c084fc;border:1px solid rgba(124,58,237,0.25)}
+    .sname{font-size:0.85rem;font-weight:700;margin-bottom:3px}
+    .sdesc{font-size:0.76rem;color:var(--muted);line-height:1.7}
+    .scost{font-size:0.7rem;color:var(--green);font-weight:600;margin-top:4px}
+    .tips-wrap{margin-top:24px}
+    .tips-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:12px}
+    .tip{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px}
+    .tip-icon{font-size:1.1rem;margin-bottom:4px}
+    .tip-text{font-size:0.75rem;color:var(--muted);line-height:1.6}
+    .saved-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+    .sitem{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all 0.2s;position:relative}
+    .sitem:hover{border-color:rgba(124,58,237,0.4);transform:translateY(-2px)}
+    .sdest{font-size:0.85rem;font-weight:700;margin-bottom:3px}
+    .smeta{font-size:0.7rem;color:var(--muted)}
+    .sdel{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:rgba(239,68,68,0.1);border:none;color:var(--red);font-size:0.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:all 0.2s}
+    .sitem:hover .sdel{opacity:1}
+    .empty{text-align:center;color:var(--muted);font-size:0.82rem;padding:32px 0}
+    .error-box{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:16px;color:var(--red);font-size:0.82rem;margin-top:12px;display:none}
+  </style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<nav>
+  <div class="nav-brand">✈️ AI Travel Planner</div>
+  <div class="nav-badge">⚡ Powered by Gemini AI</div>
+</nav>
+<div class="wrapper">
+  <div class="hero">
+    <div class="hero-tag"><span class="ai-dot"></span> Artificial Intelligence</div>
+    <h1>Plan your perfect trip<br/>with <span>AI in seconds</span></h1>
+    <p>Enter your destination, budget, and travel style — AI generates a complete day-by-day itinerary tailored just for you.</p>
+  </div>
+
+  <div class="card">
+    <div class="slabel">Trip Details</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Destination</label><input type="text" id="dest" placeholder="e.g. Paris, Tokyo, Berlin"/></div>
+      <div class="form-group"><label>Number of Days</label><select id="days"><option value="2">2 Days</option><option value="3">3 Days</option><option value="4">4 Days</option><option value="5" selected>5 Days</option><option value="7">7 Days</option><option value="10">10 Days</option></select></div>
+      <div class="form-group"><label>Total Budget</label><input type="number" id="budget" placeholder="e.g. 1500"/></div>
+      <div class="form-group"><label>Currency</label><select id="currency"><option value="EUR">EUR — Euro</option><option value="USD">USD — US Dollar</option><option value="GBP">GBP — British Pound</option><option value="INR">INR — Indian Rupee</option><option value="JPY">JPY — Japanese Yen</option></select></div>
+      <div class="form-group"><label>Traveling With</label><select id="group"><option value="solo">Solo</option><option value="couple">Couple</option><option value="friends">Friends</option><option value="family">Family</option></select></div>
+      <div class="form-group"><label>Month</label><select id="month"><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option selected>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
+      <div class="form-group full"><label>Special Interests (optional)</label><input type="text" id="interests" placeholder="e.g. museums, street food, hiking, photography..."/></div>
+    </div>
+    <div class="slabel">Travel Style</div>
+    <div class="style-grid">
+      <div class="style-card selected" data-style="cultural" onclick="pickStyle(this)"><div class="icon">🏛️</div><div class="name">Cultural</div></div>
+      <div class="style-card" data-style="adventure" onclick="pickStyle(this)"><div class="icon">🧗</div><div class="name">Adventure</div></div>
+      <div class="style-card" data-style="luxury" onclick="pickStyle(this)"><div class="icon">💎</div><div class="name">Luxury</div></div>
+      <div class="style-card" data-style="budget" onclick="pickStyle(this)"><div class="icon">💰</div><div class="name">Budget</div></div>
+      <div class="style-card" data-style="foodie" onclick="pickStyle(this)"><div class="icon">🍜</div><div class="name">Foodie</div></div>
+      <div class="style-card" data-style="relaxation" onclick="pickStyle(this)"><div class="icon">🌅</div><div class="name">Relaxation</div></div>
+      <div class="style-card" data-style="nightlife" onclick="pickStyle(this)"><div class="icon">🎉</div><div class="name">Nightlife</div></div>
+      <div class="style-card" data-style="nature" onclick="pickStyle(this)"><div class="icon">🌿</div><div class="name">Nature</div></div>
+    </div>
+    <button class="btn-gen" id="gbtn" onclick="gen()">✨ Generate My Itinerary</button>
+    <div class="error-box" id="error-box"></div>
+  </div>
+
+  <div class="loading" id="loading">
+    <span class="loading-emoji">✈️</span>
+    <h3>Planning your perfect trip...</h3>
+    <p>AI is crafting your personalized itinerary</p>
+    <div class="bar-wrap"><div class="bar" id="bar"></div></div>
+    <div class="bar-status" id="bstatus">Starting...</div>
+  </div>
+
+  <div class="itin" id="itin">
+    <div class="itin-top">
+      <div><div class="itin-title" id="ititle">—</div><div class="itin-meta" id="imeta"></div></div>
+      <div class="itin-actions">
+        <button class="btn-sm" onclick="saveIt()">💾 Save</button>
+        <button class="btn-sm" onclick="dl()">⬇️ Download</button>
+        <button class="btn-sm p" onclick="rst()">+ New Trip</button>
+      </div>
+    </div>
+    <div class="slabel">Budget Breakdown</div>
+    <div class="budget-grid" id="bgrid"></div>
+    <div class="slabel">Day by Day Itinerary</div>
+    <div class="days-wrap" id="dwrap"></div>
+    <div class="tips-wrap" id="twrap"></div>
+  </div>
+
+  <div class="card">
+    <div class="slabel">Saved Itineraries</div>
+    <div id="swrap"><p class="empty">No saved itineraries yet. Generate one and save it! 👆</p></div>
+  </div>
+</div>
+
+<script>
+  let tStyle='cultural', cur=null, saved=JSON.parse(localStorage.getItem('tp_saved')||'[]'), loadIv
+
+  function pickStyle(el){
+    document.querySelectorAll('.style-card').forEach(c=>c.classList.remove('selected'))
+    el.classList.add('selected')
+    tStyle=el.dataset.style
+  }
+
+  function animBar(){
+    const steps=[[15,'Researching destination...'],[35,'Planning activities...'],[55,'Calculating budget...'],[75,'Adding local tips...'],[90,'Finalizing itinerary...']]
+    let i=0
+    clearInterval(loadIv)
+    document.getElementById('bar').style.width='0%'
+    loadIv=setInterval(()=>{
+      if(i<steps.length){
+        document.getElementById('bar').style.width=steps[i][0]+'%'
+        document.getElementById('bstatus').textContent=steps[i][1]
+        i++
+      }
+    },1400)
+  }
+
+  async function gen(){
+    const dest=document.getElementById('dest').value.trim()
+    const budget=document.getElementById('budget').value.trim()
+    if(!dest){shake(document.getElementById('dest'));return}
+    if(!budget){shake(document.getElementById('budget'));return}
+
+    const days=document.getElementById('days').value
+    const currency=document.getElementById('currency').value
+    const group=document.getElementById('group').value
+    const month=document.getElementById('month').value
+    const interests=document.getElementById('interests').value.trim()
+
+    const btn=document.getElementById('gbtn')
+    const errBox=document.getElementById('error-box')
+    btn.disabled=true
+    btn.innerHTML='<span class="spinner"></span> Generating...'
+    errBox.style.display='none'
+    document.getElementById('loading').style.display='block'
+    document.getElementById('itin').style.display='none'
+    document.getElementById('loading').scrollIntoView({behavior:'smooth'})
+    animBar()
+
+    try{
+      const res=await fetch('/api/generate',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          destination: dest,
+          days, budget, currency,
+          group, month,
+          style: tStyle,
+          interests
+        })
+      })
+
+      if(!res.ok){
+        const err=await res.json()
+        throw new Error(err.error||'Server error')
+      }
+
+      const data = await res.json()
+
+      if(data.error) throw new Error(data.error)
+
+      // Server now returns parsed object directly
+      cur = data.result
+      showItin(cur)
+
+    }catch(e){
+      console.error(e)
+      errBox.textContent='Error: '+e.message+'. Make sure the server is running (npm start).'
+      errBox.style.display='block'
+      document.getElementById('loading').style.display='none'
+    }finally{
+      clearInterval(loadIv)
+      btn.disabled=false
+      btn.innerHTML='✨ Generate My Itinerary'
+    }
+  }
+
+  function showItin(it){
+    clearInterval(loadIv)
+    document.getElementById('bar').style.width='100%'
+    document.getElementById('bstatus').textContent='Done! ✅'
+    setTimeout(()=>{
+      document.getElementById('loading').style.display='none'
+      document.getElementById('itin').style.display='block'
+      document.getElementById('itin').scrollIntoView({behavior:'smooth'})
+    },500)
+    document.getElementById('ititle').textContent=it.destination
+    document.getElementById('imeta').innerHTML=`<span>📅 ${it.totalDays} Days</span><span>💰 ${it.budget}</span><span>🎯 ${cap(it.style)}</span><span>✨ ${it.tagline}</span>`
+    const bd=it.budgetBreakdown||{}
+    document.getElementById('bgrid').innerHTML=Object.entries(bd).map(([k,v])=>`<div class="bitem"><div class="bval">${v}</div><div class="blabel">${cap(k)}</div></div>`).join('')
+    document.getElementById('dwrap').innerHTML=it.days.map(d=>`
+      <div class="dcard">
+        <div class="dhead"><div class="dtitle">Day ${d.day} — ${d.theme}</div><div class="dbadge">${d.dailyBudget}</div></div>
+        <div class="dbody">${sl('Morning',d.morning,'m')}${sl('Afternoon',d.afternoon,'a')}${sl('Evening',d.evening,'e')}</div>
+      </div>`).join('')
+    document.getElementById('twrap').innerHTML=it.tips?.length?`<div class="slabel">Local Tips</div><div class="tips-grid">${it.tips.map(t=>`<div class="tip"><div class="tip-icon">${t.icon}</div><div class="tip-text">${t.text}</div></div>`).join('')}</div>`:''
+  }
+
+  function sl(label,s,type){
+    if(!s)return ''
+    return `<div class="slot"><div><span class="sbadge s${type}">${label}</span></div><div><div class="sname">${s.activity}</div><div class="sdesc">${s.description}</div>${s.estimatedCost?`<div class="scost">💰 ${s.estimatedCost}</div>`:''}</div></div>`
+  }
+
+  function saveIt(){
+    if(!cur)return
+    if(saved.some(s=>s.destination===cur.destination&&s.totalDays===cur.totalDays)){toast('Already saved!','amber');return}
+    saved.unshift({...cur,id:Date.now(),savedAt:new Date().toLocaleDateString('en-GB')})
+    localStorage.setItem('tp_saved',JSON.stringify(saved))
+    renderSaved();toast('Saved! 💾','green')
+  }
+
+  function renderSaved(){
+    const w=document.getElementById('swrap')
+    if(!saved.length){w.innerHTML='<p class="empty">No saved itineraries yet. Generate one and save it! 👆</p>';return}
+    const g=document.createElement('div');g.className='saved-grid'
+    saved.forEach(s=>{
+      const el=document.createElement('div');el.className='sitem'
+      el.innerHTML=`<div class="sdest">✈️ ${s.destination}</div><div class="smeta">${s.totalDays} days · ${cap(s.style)} · ${s.budget}</div><div class="smeta">Saved ${s.savedAt}</div><button class="sdel" onclick="delS(${s.id},event)">✕</button>`
+      el.addEventListener('click',()=>{cur=s;showItin(s)})
+      g.appendChild(el)
+    })
+    w.innerHTML='';w.appendChild(g)
+  }
+
+  function delS(id,e){
+    e.stopPropagation()
+    saved=saved.filter(s=>s.id!==id)
+    localStorage.setItem('tp_saved',JSON.stringify(saved))
+    renderSaved();toast('Deleted','red')
+  }
+
+  function dl(){
+    if(!cur)return
+    let txt=`TRAVEL ITINERARY\n${'='.repeat(50)}\nDestination: ${cur.destination}\nDuration: ${cur.totalDays} Days\nBudget: ${cur.budget}\nStyle: ${cap(cur.style)}\n${cur.tagline}\n\n`
+    cur.days.forEach(d=>{
+      txt+=`DAY ${d.day}: ${d.theme}\nBudget: ${d.dailyBudget}\n`
+      if(d.morning)txt+=`MORNING: ${d.morning.activity}\n${d.morning.description}\n`
+      if(d.afternoon)txt+=`AFTERNOON: ${d.afternoon.activity}\n${d.afternoon.description}\n`
+      if(d.evening)txt+=`EVENING: ${d.evening.activity}\n${d.evening.description}\n\n`
+    })
+    if(cur.tips){txt+=`TIPS\n`;cur.tips.forEach(t=>txt+=`${t.icon} ${t.text}\n`)}
+    txt+=`\nGenerated by AI Travel Planner — TechWithKeshav`
+    const a=document.createElement('a')
+    a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain'}))
+    a.download=`${cur.destination.replace(/[^a-z0-9]/gi,'_')}_itinerary.txt`
+    a.click()
+    toast('Downloaded! ⬇️','green')
+  }
+
+  function rst(){
+    document.getElementById('itin').style.display='none'
+    document.getElementById('dest').value=''
+    document.getElementById('budget').value=''
+    window.scrollTo({top:0,behavior:'smooth'})
+  }
+
+  function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):''}
+
+  function shake(el){
+    el.style.borderColor='#ef4444'
+    el.style.boxShadow='0 0 0 3px rgba(239,68,68,0.15)'
+    setTimeout(()=>{el.style.borderColor='';el.style.boxShadow=''},1000)
+    el.focus()
+  }
+
+  function toast(msg,type='green'){
+    const c={green:'#059669',red:'#dc2626',amber:'#d97706'}
+    const ex=document.querySelector('.toast');if(ex)ex.remove()
+    const t=document.createElement('div');t.className='toast';t.textContent=msg
+    t.style.cssText=`position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:${c[type]};color:#fff;padding:12px 24px;border-radius:100px;font-size:0.85rem;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);white-space:nowrap`
+    document.body.appendChild(t);setTimeout(()=>t.remove(),3000)
+  }
+
+  renderSaved()
+</script>
+</body>
+</html>
